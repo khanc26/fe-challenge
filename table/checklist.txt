@@ -1,0 +1,5 @@
+1). filtering functionality
+2). Implement a virtualization mode (infinite scroll)
+3). Fetch data from a public API
++ Implement a loading spinner
++ Properly handle errors and display error messages to the user (when failed to fetch data)
