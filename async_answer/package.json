@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start": "tsc index.ts && node index.js"
+  },
+  "dependencies": {
+    "@types/node": "^22.14.0"
+  }
+}

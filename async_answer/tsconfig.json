@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "es2017", // or "es2015" minimum for Promise
+    "lib": ["es2017", "DOM"], // or "es2015", "dom" if using browser APIs
+    "module": "commonjs", // or "esnext" for ESM
+    "strict": true,
+    "esModuleInterop": true,
+  }
+}
