@@ -6,7 +6,6 @@ import ThemeToggle from "@/components/layout/theme-toggle"; // client component
 import DataTable from "@/components/ui/table/data-table"; // client component
 import { TUser } from "@/interfaces/User";
 import userColumns from "@/types/user/user-columns";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -38,8 +37,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const router = useRouter();
-
   const fetchAndSetData = async () => {
     setErrorMessage(null);
     setLoading(true);
@@ -67,7 +64,6 @@ export default function Home() {
       });
     } catch (error) {
       console.error("Error fetching data:", error);
-      router.push("/error");
     } finally {
       setLoading(false);
     }

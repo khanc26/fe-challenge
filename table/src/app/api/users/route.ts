@@ -59,7 +59,7 @@ export async function GET(req: Request) {
     const start = (page - 1) * perPage;
     const paginatedUsers = processedUsers.slice(start, start + perPage);
 
-    // throw Error();
+    throw Error();
 
     return NextResponse.json({
       total: processedUsers.length,
