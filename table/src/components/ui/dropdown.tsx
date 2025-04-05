@@ -1,9 +1,9 @@
 import { cn } from "@/utils/cn";
 
 type DropDownProps = {
-  selectedItem: number | "all";
-  setSelectedItem: (value: number | "all") => void;
-  options: (number | "all")[];
+  selectedItem: number;
+  setSelectedItem: (value: number) => void;
+  options: number[];
   className?: string;
 };
 
@@ -25,9 +25,7 @@ export default function DropDown({
         value={selectedItem}
         onChange={(e) => {
           const value = e.target.value;
-          if (value === "all") {
-            setSelectedItem(value);
-          } else setSelectedItem(Number(e.target.value));
+          setSelectedItem(Number(value));
         }}
       >
         {options.map((option) => (

@@ -4,16 +4,15 @@ import path from "path";
 import { TUser } from "@/interfaces/User";
 
 export async function GET(req: Request) {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
   const { searchParams } = new URL(req.url);
   const sort = searchParams.get("sort");
   const order = searchParams.get("order") || "asc";
+  const filter = searchParams.get("filter") || "";
+  const filterVal = searchParams.get("filterVal") || "";
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const perPageRaw = searchParams.get("perPage");
-  const perPage = perPageRaw
-    ? perPageRaw === "all"
-      ? "all"
-      : parseInt(perPageRaw, 10)
-    : "all";
+  const perPage = parseInt(searchParams.get("perPage") || "10", 10);
 
   const filePath = path.join(process.cwd(), "public", "users.json");
 
@@ -21,8 +20,22 @@ export async function GET(req: Request) {
     const usersData = fs.readFileSync(filePath, "utf-8");
     const rawUsers: TUser[] = JSON.parse(usersData);
 
-    const processedUsers = [...rawUsers];
+    let processedUsers = [...rawUsers];
 
+    // Filter logic
+    if (filter && filterVal) {
+      processedUsers = processedUsers.filter((col: TUser) => {
+        if (filter in col) {
+          const columnValue = String(col[filter as keyof TUser]);
+          const filterValue = String(filterVal);
+
+          return columnValue.toLowerCase().includes(filterValue.toLowerCase());
+        }
+        return false;
+      });
+    }
+    
+    // Sort logic
     if (sort) {
       processedUsers.sort((a, b) => {
         const aVal = a[sort as keyof TUser];
@@ -42,17 +55,14 @@ export async function GET(req: Request) {
       });
     }
 
-    let paginatedUsers: TUser[];
+    // Pagination logic
+    const start = (page - 1) * perPage;
+    const paginatedUsers = processedUsers.slice(start, start + perPage);
 
-    if (perPage === "all") {
-      paginatedUsers = processedUsers;
-    } else {
-      const start = (page - 1) * perPage;
-      paginatedUsers = processedUsers.slice(start, start + perPage);
-    }
+    // throw Error();
 
     return NextResponse.json({
-      total: rawUsers.length,
+      total: processedUsers.length,
       users: paginatedUsers,
     });
   } catch (error) {

@@ -3,16 +3,16 @@ import DropDown from "../dropdown";
 import { cn } from "@/utils/cn";
 
 type TablePaginationProps = {
-  perPage: number | "all";
+  perPage: number;
   page: number;
   totalItems: number | null;
   totalPages: number;
-  setPerPage: (value: number | "all") => void;
+  setPerPage: (value: number) => void;
   setPage: (value: number) => void;
   className?: string;
 };
 
-const options: (number | "all")[] = ["all", 5, 10, 20, 50, 100];
+const options: number[] = [5, 10, 20, 50, 100];
 
 export default function TablePagination({
   perPage = 10,

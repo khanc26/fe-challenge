@@ -5,11 +5,13 @@ export default function initialColumns<T>(
   sortColumnKey: string | null,
   sortOrder: "asc" | "desc" | null,
   setSortColumnKey: (key: string | null) => void,
-  setSortOrder: (order: "asc" | "desc" | null) => void
+  setSortOrder: (order: "asc" | "desc" | null) => void,
+  resetTable: () => void
 ) {
   const handleSort = (column: ColumnRef<T>) => {
     if (!column.enableSorting) return;
 
+    resetTable();
     if (sortColumnKey === column.key) {
       if (sortOrder === "asc") {
         setSortOrder("desc");

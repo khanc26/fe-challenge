@@ -13,7 +13,9 @@ import { ColumnRef, SortDirection } from "@/core/table/type";
 import { cn } from "@/utils/cn";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { Key, useCallback, useEffect, useMemo, useState } from "react";
+import { Key, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import FilterInput from "./filter-input";
+import InfiniteScrollToggle from "@/components/layout/infinite-scroll-toggle";
 
 type WithId = { id: string | number };
 
@@ -30,15 +32,35 @@ export default function DataTable<T extends WithId>({
   columns: rawColumns,
   className,
 }: DataTableProps<T>) {
+  const [dataList, setDataList] = useState<T[]>([]);
   const [sortColumnKey, setSortColumnKey] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortDirection>(null);
-  const [perPage, setPerPage] = useState<number | "all">(10);
+  const [perPage, setPerPage] = useState<number>(10);
   const [page, setPage] = useState<number>(1);
-  // const [filterColumnKey, setFilterColumnKey] = useState<string | null>(null);
-  // const [filterValue, setFilterValue] = useState<string>("");
+  const [filterColumnKey, setFilterColumnKey] = useState<string | null>(null);
+  const [filterValue, setFilterValue] = useState<string>("");
+  const [infiniteScroll, setInfiniteScroll] = useState<boolean>(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (infiniteScroll) {
+      setDataList((prev) => {
+        const newList = [...prev, ...data];
+        return newList;
+      });
+    } else {
+      setDataList([...data]);
+    }
+  }, [data]);
+
+  // Reset table whenever filtering or sorting is performed
+  const resetTable = () => {
+    setPage(1);
+    setDataList([]);
+  };
 
   const updateQuery = useCallback(
     (updates: Record<string, string | number | null>) => {
@@ -61,16 +83,46 @@ export default function DataTable<T extends WithId>({
       order: sortOrder,
       page: page,
       perPage: perPage,
+      filter: filterColumnKey,
+      filterVal: filterValue,
+      infinite: `${infiniteScroll}`,
     });
-  }, [sortColumnKey, sortOrder, page, perPage, updateQuery]);
+  }, [
+    sortColumnKey,
+    sortOrder,
+    page,
+    perPage,
+    filterColumnKey,
+    filterValue,
+    updateQuery,
+    infiniteScroll,
+  ]);
 
-  // useEffect(() => {
-  //   updateQuery("filterCol", filterColumnKey);
-  // }, [filterColumnKey, updateQuery]);
+  // Detect when the last row is in view (for infinite scroll)
+  useEffect(() => {
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      const entry = entries[0];
+      if (entry.isIntersecting && infiniteScroll) {
+        setPage((prevPage) => prevPage + 1); // Increment page to load more
+      }
+    };
 
-  // useEffect(() => {
-  //   updateQuery("filterVal", filterValue || null);
-  // }, [filterValue, updateQuery]);
+    // Initialize IntersectionObserver
+    observerRef.current = new IntersectionObserver(observerCallback, {
+      rootMargin: "200px", // Trigger before it's completely in view
+    });
+
+    const lastRow = document.querySelector("#lastRow"); // Get the last row element
+    if (lastRow && observerRef.current) {
+      observerRef.current.observe(lastRow); // Start observing
+    }
+
+    return () => {
+      if (observerRef.current && lastRow) {
+        observerRef.current.unobserve(lastRow); // Clean up the observer
+      }
+    };
+  }, [dataList, infiniteScroll]);
 
   const columns = useMemo(
     () =>
@@ -79,41 +131,19 @@ export default function DataTable<T extends WithId>({
         sortColumnKey,
         sortOrder,
         setSortColumnKey,
-        setSortOrder
+        setSortOrder,
+        resetTable
       ),
     [rawColumns, sortColumnKey, sortOrder]
   );
 
   const totalPages = useMemo(() => {
-    if (perPage !== "all") {
-      return Math.ceil(totalItems / perPage);
-    } else return 1;
+    return Math.ceil(totalItems / perPage);
   }, [totalItems, perPage]);
 
-  // Sort logic
-  // const sortedData = useMemo(() => {
-  //   if (!sortColumnKey || !sortOrder) return data;
-
-  //   const sortColumn = columns.find((col) => col.key === sortColumnKey);
-  //   if (!sortColumn) return data;
-
-  //   return [...data].sort((a, b) => {
-  //     const valueA = sortColumn.assessor(a);
-  //     const valueB = sortColumn.assessor(b);
-
-  //     if (typeof valueA === "number" && typeof valueB === "number") {
-  //       return sortOrder === "asc" ? valueA - valueB : valueB - valueA;
-  //     }
-
-  //     return sortOrder === "asc"
-  //       ? String(valueA).localeCompare(String(valueB))
-  //       : String(valueB).localeCompare(String(valueA));
-  //   });
-  // }, [data, sortColumnKey, sortOrder, columns]);
-
-  // Filter logic
-
-  // Pagination logic
+  const hasMore = useMemo(() => {
+    return page < totalPages;
+  }, [page, totalPages]);
 
   return (
     <div className="w-full">
@@ -123,9 +153,24 @@ export default function DataTable<T extends WithId>({
           className
         )}
       >
-        {/* <FilterInput
-          filter
-        /> */}
+        <div className="flex flex-row justify-between items-center">
+          <FilterInput
+            columnList={columns.map((column) => {
+              return column.key as string;
+            })}
+            filterColumnKey={filterColumnKey}
+            setFilterColumnKey={setFilterColumnKey}
+            filterValue={filterValue}
+            setFilterValue={setFilterValue}
+            resetTable={resetTable}
+          />
+          <InfiniteScrollToggle
+            infiniteScroll={infiniteScroll}
+            toggle={() => setInfiniteScroll((prevVal) => !prevVal)}
+            resetTable={resetTable}
+          />
+        </div>
+
         {/* Table */}
         <Table>
           <THeader>
@@ -141,9 +186,9 @@ export default function DataTable<T extends WithId>({
               })}
             </TRow>
           </THeader>
-          {data.length > 0 ? (
+          {dataList.length > 0 ? (
             <TBody>
-              {data.map((row) => (
+              {dataList.map((row) => (
                 <TRow key={row.id}>
                   {columns.map((col) => (
                     <TCell
@@ -155,6 +200,11 @@ export default function DataTable<T extends WithId>({
                   ))}
                 </TRow>
               ))}
+              {infiniteScroll && hasMore && (
+                <TRow id="lastRow">
+                  <TCell colSpan={columns.length}>{""}</TCell>
+                </TRow>
+              )}
             </TBody>
           ) : (
             <TBody>
@@ -172,15 +222,17 @@ export default function DataTable<T extends WithId>({
       </div>
 
       {/* Table Pagination */}
-      <TablePagination
-        setPerPage={setPerPage}
-        setPage={setPage}
-        totalItems={totalItems}
-        perPage={perPage}
-        page={page}
-        totalPages={totalPages}
-        className="text-xs md:text-sm lg:text-base"
-      />
+      {!infiniteScroll && (
+        <TablePagination
+          setPerPage={setPerPage}
+          setPage={setPage}
+          totalItems={totalItems}
+          perPage={perPage}
+          page={page}
+          totalPages={totalPages}
+          className="text-xs md:text-sm lg:text-base"
+        />
+      )}
     </div>
   );
 }
