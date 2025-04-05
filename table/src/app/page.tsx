@@ -75,7 +75,7 @@ export default function Home() {
 
   return (
     <div className="relative w-full px-8 md:px-20 py-8">
-      <div className="flex flex-row justify-end pr-2">
+      <div className="flex flex-row justify-end pr-2 mb-4">
         <ThemeToggle />
       </div>
 

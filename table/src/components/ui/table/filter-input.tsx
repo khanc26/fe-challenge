@@ -41,7 +41,7 @@ export default function FilterInput({
 
   return (
     <div
-      className={`flex flex-row items-center gap-4 p-2 bg-white dark:bg-slate-800 mb-4 rounded-xl shadow-sm border ${className}`}
+      className={`flex flex-row items-center gap-4 p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm border ${className}`}
     >
       {/* Dropdown select */}
       <select
@@ -50,7 +50,7 @@ export default function FilterInput({
           resetTable();
           setFilterColumnKey(e.target.value);
         }}
-        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
       >
         <option value="" disabled>
           Select column
@@ -68,7 +68,7 @@ export default function FilterInput({
         placeholder="Enter filter value..."
         value={inputValue}
         onChange={handleInputChange}
-        className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-60 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-40 focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
       />
     </div>
   );

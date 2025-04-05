@@ -147,30 +147,30 @@ export default function DataTable<T extends WithId>({
 
   return (
     <div className="w-full">
+      <div className="w-full flex flex-col p-2 gap-4 md:flex-row justify-between items-end md:items-center">
+        <FilterInput
+          columnList={columns.map((column) => {
+            return column.key as string;
+          })}
+          filterColumnKey={filterColumnKey}
+          setFilterColumnKey={setFilterColumnKey}
+          filterValue={filterValue}
+          setFilterValue={setFilterValue}
+          resetTable={resetTable}
+        />
+        <InfiniteScrollToggle
+          infiniteScroll={infiniteScroll}
+          toggle={() => setInfiniteScroll((prevVal) => !prevVal)}
+          resetTable={resetTable}
+        />
+      </div>
+
       <div
         className={cn(
           "overflow-x-auto p-2 flex flex-col justify-center",
           className
         )}
       >
-        <div className="flex flex-row justify-between items-center">
-          <FilterInput
-            columnList={columns.map((column) => {
-              return column.key as string;
-            })}
-            filterColumnKey={filterColumnKey}
-            setFilterColumnKey={setFilterColumnKey}
-            filterValue={filterValue}
-            setFilterValue={setFilterValue}
-            resetTable={resetTable}
-          />
-          <InfiniteScrollToggle
-            infiniteScroll={infiniteScroll}
-            toggle={() => setInfiniteScroll((prevVal) => !prevVal)}
-            resetTable={resetTable}
-          />
-        </div>
-
         {/* Table */}
         <Table>
           <THeader>
